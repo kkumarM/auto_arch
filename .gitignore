@@ -8,7 +8,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv/
-auto_arch
+# Virtual Environment (auto_arch)
+auto_arch/
 .venv/
 backend/venv/
 *.env
