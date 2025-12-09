@@ -1,43 +1,39 @@
-# Dependencies
-node_modules/
-venv/
-auto_arch/
-.venv/
+# General
+.DS_Store
+Thumbs.db
+*.log
+
+# Python (Backend)
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+venv/
+auto_arch
+.venv/
+backend/venv/
+*.env
 
-# Environment Variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Build Outputs
-dist/
-build/
-coverage/
-
-# Logs
+# Node.js (Frontend)
+# This will match node_modules in any subdirectory, including frontend/auto_arch/
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.log
 
-# System Files
-.DS_Store
-Thumbs.db
+# Frontend Build Outputs
+frontend/auto_arch/build/
+frontend/auto_arch/dist/
+frontend/auto_arch/.env.local
+frontend/auto_arch/.env.development.local
+frontend/auto_arch/.env.test.local
+frontend/auto_arch/.env.production.local
 
 # IDEs
 .vscode/
 .idea/
 
-# AutoArch Generated Projects
-# Ignore the default generated folder and any other project folders created by the tool
-# You can uncomment these if you WANT to commit generated code
+# AutoArch Generated Output
+# Ignore generated project folders in backend
 backend/generated_project/
 backend/my-awesome-project/
-# If you want to ignore all subdirectories in backend except 'app', 'data', 'services', 'api' etc., that's harder.
-# For now, we'll just ignore the known ones or let the user manage it.
+# You might want to add other project names here if you generate them
