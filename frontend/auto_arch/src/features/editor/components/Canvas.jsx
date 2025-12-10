@@ -6,6 +6,7 @@ import ReactFlow, {
     useEdgesState,
     Controls,
     Background,
+    ConnectionMode,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
@@ -48,6 +49,11 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
                 console.error("Error loading template:", error);
                 alert(`Error loading template: ${error.message}`);
             }
+        },
+        loadDiagram: (diagram) => {
+            if (!diagram) return;
+            setNodes(diagram.nodes || []);
+            setEdges(diagram.edges || []);
         },
         updateNodeData: (nodeId, newData) => {
             setNodes((nds) =>
@@ -104,7 +110,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
             const isGroup = type === 'group';
             const newNode = {
                 id: getId(),
-                type: type,
+                type: isGroup ? 'group' : 'custom', // Force 'custom' for non-group nodes
                 position,
                 data: { label: label || type, type: type, icon: icon, color: color },
                 style: isGroup ? { width: 300, height: 200, zIndex: -1 } : undefined, // Default size and z-index for groups
@@ -155,6 +161,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 defaultEdgeOptions={{ type: 'custom' }}
+                connectionMode={ConnectionMode.Loose} // Enable loose connections
                 fitView
                 className="bg-[#1a1a1a]"
             >

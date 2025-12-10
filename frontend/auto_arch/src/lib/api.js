@@ -59,3 +59,7 @@ export const api = {
 export const generateCode = async (diagram) => {
     return api.post("/generate", diagram);
 };
+
+export const generateFromPrompt = async (prompt, projectType) => {
+    return api.post("/generate-from-prompt", { prompt, projectType });
+};

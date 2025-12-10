@@ -1,75 +1,59 @@
 import React, { useState } from "react";
 import { Icons } from "./icons";
 
-const categories = [
-    {
-        name: "Clients",
-        items: [
-            {
-                name: "Mobile",
-                items: [
-                    { type: "Mobile App", label: "iOS App", color: "bg-purple-600", icon: "Mobile", templateId: "ios" },
-                    { type: "Mobile App", label: "Android App", color: "bg-green-600", icon: "Mobile", templateId: "android" },
-                ]
-            },
-            {
-                name: "Web",
-                items: [
-                    { type: "Web App", label: "React App", color: "bg-blue-500", icon: "Web", templateId: "react" },
-                    { type: "Web App", label: "Next.js App", color: "bg-black", icon: "Web", templateId: "nextjs" },
-                    { type: "SPA", label: "SPA (TypeScript)", color: "bg-blue-400", icon: "Code" },
-                ]
-            }
-        ]
-    },
+const mobileCategories = [
     {
         name: "Infrastructure",
         items: [
-            { type: 'group', label: 'Layer Group', icon: 'Group' }, // New Group Item
-            { type: 'Kubernetes', label: 'Kubernetes', icon: 'Kubernetes' },
-            { type: 'Docker', label: 'Docker', icon: 'Docker' },
-            { type: 'Server', label: 'Server', icon: 'Server' },
-            { type: 'Cloud', label: 'Cloud', icon: 'Cloud' },
-            { type: "Load Balancer", label: "Load Balancer", color: "bg-yellow-500", icon: "Server" },
-            { type: "Nginx", label: "Nginx", color: "bg-green-500", icon: "Server" },
-            { type: "Apache", label: "Apache", color: "bg-red-500", icon: "Server" },
+            { type: 'Cloud', label: 'Cloud Provider', icon: 'Cloud' },
             { type: "API Gateway", label: "API Gateway", color: "bg-orange-500", icon: "Gateway" },
             { type: "CDN", label: "CDN", color: "bg-cyan-500", icon: "Cloud" },
-            { type: "Static Content", label: "Static Content", color: "bg-green-500", icon: "File" },
+            { type: "Firebase", label: "Firebase", color: "bg-yellow-500", icon: "Cloud" },
         ]
     },
     {
-        name: "Services",
+        name: "Backend Services",
         items: [
             { type: "Microservice", label: "Microservice", color: "bg-green-600", icon: "Microservice" },
-            { type: "Service Discovery", label: "Service Discovery", color: "bg-indigo-500", icon: "Compass" },
-            { type: "Management", label: "Management", color: "bg-gray-500", icon: "Settings" },
-        ]
-    },
-    {
-        name: "Data & Messaging",
-        items: [
             { type: "Database", label: "Database", color: "bg-red-600", icon: "Database" },
-            { type: "RabbitMQ/KAFKA", label: "RabbitMQ/KAFKA", color: "bg-blue-800", icon: "Queue" },
-            { type: "Logstash", label: "Logstash", color: "bg-yellow-600", icon: "Log" },
-            { type: "ELK", label: "ELK Stack", color: "bg-blue-400", icon: "Stack" },
-        ]
-    },
-    {
-        name: "Notifications",
-        items: [
-            { type: "Email", label: "Email", color: "bg-blue-300", icon: "Mail" },
-            { type: "SMS", label: "SMS", color: "bg-blue-300", icon: "Chat" },
-            { type: "Alerts", label: "Alerts", color: "bg-red-500", icon: "Bell" },
+            { type: "Auth Service", label: "Auth Service", color: "bg-blue-500", icon: "Key" },
         ]
     }
 ];
 
-export default function Sidebar({ onLoadTemplate }) {
+const webCategories = [
+    {
+        name: "Infrastructure",
+        items: [
+            { type: "Load Balancer", label: "Load Balancer", color: "bg-yellow-500", icon: "Server" },
+            { type: "Nginx", label: "Nginx", color: "bg-green-500", icon: "Server" },
+            { type: "Docker", label: "Docker Container", icon: "Docker" },
+            { type: "Kubernetes", label: "Kubernetes Cluster", icon: "Kubernetes" },
+        ]
+    },
+    {
+        name: "Backend Services",
+        items: [
+            { type: "Microservice", label: "Microservice", color: "bg-green-600", icon: "Microservice" },
+            { type: "Database", label: "Database", color: "bg-red-600", icon: "Database" },
+            { type: "Redis", label: "Redis Cache", color: "bg-red-500", icon: "Database" },
+            { type: "RabbitMQ/KAFKA", label: "Message Queue", color: "bg-blue-800", icon: "Queue" },
+        ]
+    }
+];
+
+export default function Sidebar({ onLoadTemplate, projectType }) {
+    const categories = projectType === 'mobile' ? mobileCategories : webCategories;
+
     const [isOpen, setIsOpen] = useState(true);
-    const [expandedCategories, setExpandedCategories] = useState(
-        categories.reduce((acc, cat) => ({ ...acc, [cat.name]: true }), {})
-    );
+    const [expandedCategories, setExpandedCategories] = useState({});
+
+    // Initialize expanded state when categories change
+    React.useEffect(() => {
+        setExpandedCategories(
+            categories.reduce((acc, cat) => ({ ...acc, [cat.name]: true }), {})
+        );
+    }, [categories]);
 
     const toggleCategory = (categoryName) => {
         setExpandedCategories(prev => ({

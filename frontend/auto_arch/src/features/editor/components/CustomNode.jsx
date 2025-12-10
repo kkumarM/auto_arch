@@ -2,6 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { Handle, Position, useReactFlow } from 'reactflow';
 import { Icons } from './icons';
 
+const colorMap = {
+    'bg-slate-500': '#64748b',
+    'bg-gray-500': '#6b7280',
+    'bg-zinc-500': '#71717a',
+    'bg-neutral-500': '#737373',
+    'bg-stone-500': '#78716c',
+    'bg-red-400': '#f87171',
+    'bg-red-500': '#ef4444',
+    'bg-red-600': '#dc2626',
+    'bg-orange-500': '#f97316',
+    'bg-amber-500': '#f59e0b',
+    'bg-yellow-500': '#eab308',
+    'bg-yellow-600': '#ca8a04',
+    'bg-lime-500': '#84cc16',
+    'bg-green-500': '#22c55e',
+    'bg-green-600': '#16a34a',
+    'bg-emerald-500': '#10b981',
+    'bg-teal-500': '#14b8a6',
+    'bg-teal-600': '#0d9488',
+    'bg-cyan-500': '#06b6d4',
+    'bg-sky-500': '#0ea5e9',
+    'bg-blue-400': '#60a5fa',
+    'bg-blue-500': '#3b82f6',
+    'bg-blue-600': '#2563eb',
+    'bg-blue-800': '#1e40af',
+    'bg-indigo-500': '#6366f1',
+    'bg-indigo-600': '#4f46e5',
+    'bg-violet-500': '#8b5cf6',
+    'bg-purple-500': '#a855f7',
+    'bg-purple-600': '#9333ea',
+    'bg-fuchsia-500': '#d946ef',
+    'bg-pink-500': '#ec4899',
+    'bg-rose-500': '#f43f5e',
+};
+
 const CustomNode = ({ id, data }) => {
     const { setNodes } = useReactFlow();
     const [isEditing, setIsEditing] = useState(false);
@@ -9,7 +44,7 @@ const CustomNode = ({ id, data }) => {
 
     useEffect(() => {
         setLabel(data.label);
-    }, [data.label]);
+    }, [data.label, data]); // Watch data for changes
 
     const onDelete = () => {
         setNodes((nodes) => nodes.filter((node) => node.id !== id));
@@ -37,6 +72,12 @@ const CustomNode = ({ id, data }) => {
         }
     };
 
+    // Helper to get hex color
+    const getBackgroundColor = () => {
+        if (!data.color) return '#333333';
+        return colorMap[data.color] || data.color; // Fallback to original string if not in map (e.g. if it's already a hex)
+    };
+
     return (
         <div className="shadow-md rounded-md bg-[#2d2d2d] border border-[#444444] min-w-[150px] group hover:border-blue-500 transition-colors relative">
             {/* Handles */}
@@ -45,7 +86,7 @@ const CustomNode = ({ id, data }) => {
 
             <div
                 className="flex items-center justify-between px-3 py-2 border-b border-[#444444] rounded-t-md"
-                style={{ backgroundColor: data.color ? data.color.replace('bg-', '').replace('-600', '').replace('-500', '') : '#333333' }}
+                style={{ backgroundColor: getBackgroundColor() }}
             >
                 <div className="flex items-center">
                     <div className={`mr-2 ${data.color ? data.color.replace('bg-', 'text-') : 'text-gray-400'} group-hover:text-white`}>
@@ -71,7 +112,7 @@ const CustomNode = ({ id, data }) => {
 
             <div className="p-3 relative">
                 {/* Add a colored strip on the left to indicate layer */}
-                <div className={`absolute left-0 top-0 bottom-0 w-1 ${data.color || 'bg-gray-500'}`}></div>
+                <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: getBackgroundColor() }}></div>
                 <div className="text-sm font-medium text-white text-center pl-2" onDoubleClick={() => setIsEditing(true)}>
                     {isEditing ? (
                         <input
