@@ -111,31 +111,41 @@ export default function EditorPage({ projectConfig, onBack }) {
             header={
                 <div className="flex items-center justify-between w-full">
                     <div className="flex items-center">
+                        <div className="flex items-center mr-8">
+                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(37,99,235,0.5)]">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <h1 className="text-xl font-bold text-white tracking-tight">AutoArch</h1>
+                        </div>
+
+                        <div className="h-6 w-[1px] bg-white/10 mx-4"></div>
+
+                        <div className="relative group">
+                            <input
+                                type="text"
+                                value={projectName}
+                                onChange={(e) => setProjectName(e.target.value)}
+                                className="bg-transparent border border-transparent hover:border-white/10 focus:border-blue-500/50 text-gray-300 text-sm rounded-md px-3 py-1.5 focus:text-white outline-none transition-all w-64 placeholder-gray-600"
+                                placeholder="Project Name"
+                            />
+                            <div className="absolute inset-0 rounded-md bg-white/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"></div>
+                        </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
                         <button
                             onClick={onBack}
-                            className="mr-4 text-gray-400 hover:text-white transition-colors flex items-center"
-                            title="Back to Project Selection"
+                            className="text-gray-500 hover:text-white transition-colors text-sm font-medium"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                            </svg>
+                            Back
                         </button>
-                        <h1 className="text-xl font-bold text-gray-200 mr-4">AutoArch</h1>
-                        <input
-                            type="text"
-                            value={projectName}
-                            onChange={(e) => setProjectName(e.target.value)}
-                            className="bg-[#2d2d2d] border border-[#444444] text-gray-300 text-sm rounded px-2 py-1 focus:border-blue-500 outline-none transition-colors w-48"
-                            placeholder="Project Name"
-                        />
-                    </div>
-                    <div className="flex space-x-2">
                         <Button
                             variant="primary"
                             size="sm"
                             onClick={handleGenerateCode}
                             isLoading={isGenerating}
-                            className="bg-blue-600 hover:bg-blue-700 text-white border-none"
+                            className="bg-blue-600 hover:bg-blue-500 text-white border-none shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] transition-all px-6"
                         >
                             Generate Code
                         </Button>
@@ -146,13 +156,7 @@ export default function EditorPage({ projectConfig, onBack }) {
             <div className="flex h-full overflow-hidden">
                 <Sidebar
                     projectType={projectConfig?.projectType}
-                    onDragStart={(event, nodeType, color, icon) => {
-                        event.dataTransfer.setData("application/reactflow", nodeType);
-                        event.dataTransfer.setData("application/reactflow/label", nodeType); // Default label
-                        if (color) event.dataTransfer.setData("application/reactflow/color", color);
-                        if (icon) event.dataTransfer.setData("application/reactflow/icon", icon);
-                        event.dataTransfer.effectAllowed = "move";
-                    }} onLoadTemplate={handleLoadTemplate} />
+                    onLoadTemplate={handleLoadTemplate} />
 
                 <div className="flex-grow relative">
                     <Canvas
