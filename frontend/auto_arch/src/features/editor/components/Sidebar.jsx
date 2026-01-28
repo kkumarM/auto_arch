@@ -1,4 +1,4 @@
-77777777777777777777 - aqx  G ^ $ % V % VVVVVVVVVVVVVVVVV %^ V ^^ 44 React, { useState } from "react";
+import React, { useState } from "react";
 import { Icons } from "./icons";
 
 const mobileCategories = [
@@ -45,7 +45,7 @@ const webCategories = [
 export default function Sidebar({ onLoadTemplate, projectType, onDragStart: externalOnDragStart }) {
     const categories = projectType === 'mobile' ? mobileCategories : webCategories;
 
-    const [isOpen,`` setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(true);
     const [expandedCategories, setExpandedCategories] = useState({});
 
     // Initialize expanded state when categories change

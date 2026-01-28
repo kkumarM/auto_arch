@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  nextjs_app:
+    build: ./nextjs_app
+    ports:
+      - '3000:3000'
+  database:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=db
+    volumes:
+      - database_data:/var/lib/postgresql/data
+  microservice:
+    build: ./microservice
+    environment:
+  api_gateway:
+    build: ./api_gateway
+    ports:
+      - '80:80'
+    depends_on:
+      - nextjs_app
+      - database
+      - microservice
+
+volumes:
+  database_data:
