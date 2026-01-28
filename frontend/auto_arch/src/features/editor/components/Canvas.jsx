@@ -40,10 +40,15 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
             return reactFlowInstance.toObject();
         },
         loadTemplate: async (templateId) => {
+            console.log('[Canvas] loadTemplate called with templateId:', templateId);
             try {
                 const template = await api.getTemplate(templateId);
+                console.log('[Canvas] Template loaded:', template);
+                console.log('[Canvas] Template nodes:', template.nodes);
+                console.log('[Canvas] Template edges:', template.edges);
                 setNodes(template.nodes || []);
                 setEdges(template.edges || []);
+                console.log('[Canvas] Nodes and edges set');
             } catch (error) {
                 console.error("Error loading template:", error);
                 alert(`Error loading template: ${error.message}`);
@@ -144,7 +149,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
     }, [onNodeSelect]);
 
     return (
-        <div className="flex-grow h-full relative bg-[#2d2d2d]">
+        <div className="flex-grow h-full relative bg-white">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -161,10 +166,10 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
                 edgeTypes={edgeTypes}
                 defaultEdgeOptions={{ type: 'custom' }}
                 fitView
-                className="bg-[#1a1a1a]"
+                className="bg-white"
             >
-                <Background color="#444444" gap={16} />
-                <Controls className="bg-[#333333] border border-[#444444] shadow-sm rounded-md fill-white text-white [&>button]:!border-[#444444] [&>button]:!bg-[#333333] [&>button:hover]:!bg-[#444444] [&>button]:!fill-gray-200" />
+                <Background color="#e5e7eb" gap={16} />
+                <Controls className="bg-white border border-gray-300 shadow-sm rounded-md fill-gray-700 text-gray-700 [&>button]:!border-gray-300 [&>button]:!bg-white [&>button:hover]:!bg-gray-100 [&>button]:!fill-gray-700" />
             </ReactFlow>
         </div>
     );

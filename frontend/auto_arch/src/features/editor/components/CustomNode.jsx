@@ -44,6 +44,7 @@ const CustomNode = ({ id, data, selected }) => {
     const getGradient = () => {
         const color = data.color || 'bg-blue-500';
         // Map common tailwind colors to gradients
+        if (color.includes('black')) return 'from-gray-800 to-gray-600';
         if (color.includes('red')) return 'from-red-600 to-red-400';
         if (color.includes('green')) return 'from-green-600 to-green-400';
         if (color.includes('yellow')) return 'from-yellow-600 to-yellow-400';

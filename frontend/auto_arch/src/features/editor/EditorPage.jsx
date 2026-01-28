@@ -15,12 +15,15 @@ export default function EditorPage({ projectConfig, onBack }) {
 
     // Auto-load template or generate from AI
     React.useEffect(() => {
+        console.log('[EditorPage] useEffect triggered', { projectConfig, hasCanvasRef: !!canvasRef.current });
         if (!projectConfig || !canvasRef.current) return;
 
         const initProject = async () => {
             if (projectConfig.mode === 'template' && projectConfig.templateId) {
                 // Load Template
+                console.log('[EditorPage] Loading template:', projectConfig.templateId);
                 setTimeout(() => {
+                    console.log('[EditorPage] Calling loadTemplate on canvasRef');
                     canvasRef.current.loadTemplate(projectConfig.templateId);
                 }, 100);
             } else if (projectConfig.mode === 'ai' && projectConfig.description) {
