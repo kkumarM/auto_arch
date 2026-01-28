@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import router
+from app.core.errors import setup_exception_handlers
 
 app = FastAPI()
+
+setup_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,

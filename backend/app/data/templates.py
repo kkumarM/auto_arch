@@ -93,3 +93,6 @@ TEMPLATES = {
         ]
     }
 }
+
+def get_template_by_id(template_id: str):
+    return TEMPLATES.get(template_id)

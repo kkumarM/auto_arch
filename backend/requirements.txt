@@ -3,3 +3,6 @@ uvicorn
 pydantic
 jinja2
 openai
+pytest
+httpx
+structlog

@@ -53,7 +53,18 @@ def generate_project(diagram: Diagram):
             env_vars = {}
             for db in connected_dbs:
                 db_label = db.data.get('label', 'db').lower().replace(" ", "_")
-                env_vars['DATABASE_URL'] = f"postgresql://user:password@{db_label}:5432/db"
+                db_mode = db.data.get('dbMode', 'local')
+                
+                if db_mode == 'cloud':
+                    # Use provided cloud credentials
+                    db_host = db.data.get('dbHost', 'localhost')
+                    db_user = db.data.get('dbUser', 'user')
+                    db_pass = db.data.get('dbPassword', 'password')
+                    db_name = db.data.get('dbName', 'db')
+                    env_vars['DATABASE_URL'] = f"postgresql://{db_user}:{db_pass}@{db_host}:5432/{db_name}"
+                else:
+                    # Use local docker container credentials
+                    env_vars['DATABASE_URL'] = f"postgresql://user:password@{db_label}:5432/db"
             
             generate_microservice(component_path, label, env_vars)
             
@@ -68,15 +79,17 @@ def generate_project(diagram: Diagram):
             nginx_locations.append(f"    location /{label}/ {{\n        proxy_pass http://{label}_upstream/;\n    }}")
 
         elif node_type == "Database":
-            docker_compose_services[label] = {
-                'image': 'postgres:13',
-                'environment': [
-                    'POSTGRES_USER=user',
-                    'POSTGRES_PASSWORD=password',
-                    'POSTGRES_DB=db'
-                ],
-                'volumes': [f'{label}_data:/var/lib/postgresql/data']
-            }
+            # Only generate docker service if mode is NOT cloud
+            if node.data.get('dbMode') != 'cloud':
+                docker_compose_services[label] = {
+                    'image': 'postgres:13',
+                    'environment': [
+                        'POSTGRES_USER=user',
+                        'POSTGRES_PASSWORD=password',
+                        'POSTGRES_DB=db'
+                    ],
+                    'volumes': [f'{label}_data:/var/lib/postgresql/data']
+                }
 
         elif node_type == "API Gateway" or "gateway" in label:
             # We'll generate the gateway config at the end
