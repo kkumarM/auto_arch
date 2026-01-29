@@ -1,6 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from './icons';
 
+const colorMap = {
+    'bg-slate-500': '#64748b',
+    'bg-gray-500': '#6b7280',
+    'bg-zinc-500': '#71717a',
+    'bg-neutral-500': '#737373',
+    'bg-stone-500': '#78716c',
+    'bg-red-400': '#f87171',
+    'bg-red-500': '#ef4444',
+    'bg-red-600': '#dc2626',
+    'bg-orange-500': '#f97316',
+    'bg-amber-500': '#f59e0b',
+    'bg-yellow-500': '#eab308',
+    'bg-yellow-600': '#ca8a04',
+    'bg-lime-500': '#84cc16',
+    'bg-green-500': '#22c55e',
+    'bg-green-600': '#16a34a',
+    'bg-emerald-500': '#10b981',
+    'bg-teal-500': '#14b8a6',
+    'bg-teal-600': '#0d9488',
+    'bg-cyan-500': '#06b6d4',
+    'bg-sky-500': '#0ea5e9',
+    'bg-blue-400': '#60a5fa',
+    'bg-blue-500': '#3b82f6',
+    'bg-blue-600': '#2563eb',
+    'bg-blue-800': '#1e40af',
+    'bg-indigo-500': '#6366f1',
+    'bg-indigo-600': '#4f46e5',
+    'bg-violet-500': '#8b5cf6',
+    'bg-purple-500': '#a855f7',
+    'bg-purple-600': '#9333ea',
+    'bg-fuchsia-500': '#d946ef',
+    'bg-pink-500': '#ec4899',
+    'bg-rose-500': '#f43f5e',
+};
+
 const COLORS = [
     { name: 'Blue', value: 'bg-blue-600' },
     { name: 'Green', value: 'bg-green-600' },
@@ -50,6 +85,12 @@ const PropertiesPanel = ({ selectedNode, onChange, onDelete, onClose }) => {
                 [field]: value
             }
         });
+    };
+
+    // Helper to get hex color
+    const getBackgroundColor = (colorClass) => {
+        if (!colorClass) return '#333333';
+        return colorMap[colorClass] || colorClass;
     };
 
     if (!selectedNode) return null;
@@ -244,11 +285,9 @@ const PropertiesPanel = ({ selectedNode, onChange, onDelete, onClose }) => {
                                         key={c.value}
                                         onClick={() => handleChange('color', c.value)}
                                         className={`h-8 rounded border-2 transition-all ${color === c.value ? 'border-white scale-110' : 'border-transparent hover:border-gray-500'}`}
-                                        style={{ backgroundColor: c.value.replace('bg-', '').replace('-600', '').replace('-500', '') }} // Hacky color mapping
+                                        style={{ backgroundColor: getBackgroundColor(c.value) }}
                                         title={c.name}
                                     >
-                                        {/* Use a real div for color if the class doesn't work directly in style */}
-                                        <div className={`w-full h-full rounded ${c.value}`}></div>
                                     </button>
                                 ))}
                             </div>
@@ -317,19 +356,92 @@ const PropertiesPanel = ({ selectedNode, onChange, onDelete, onClose }) => {
                             </div>
                             {type.toLowerCase().includes('database') && (
                                 <div>
+                                    <label className="block text-xs text-gray-400 mb-2">Deployment Mode</label>
+                                    <div className="flex space-x-4 mb-3">
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="dbMode"
+                                                value="local"
+                                                checked={selectedNode.data?.dbMode !== 'cloud'}
+                                                onChange={() => handleChange('dbMode', 'local')}
+                                                className="mr-1.5 text-blue-500 focus:ring-blue-500 bg-[#1a1a1a] border-[#444444]"
+                                            />
+                                            <span className="text-xs text-gray-300">Local (Docker)</span>
+                                        </label>
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="dbMode"
+                                                value="cloud"
+                                                checked={selectedNode.data?.dbMode === 'cloud'}
+                                                onChange={() => handleChange('dbMode', 'cloud')}
+                                                className="mr-1.5 text-blue-500 focus:ring-blue-500 bg-[#1a1a1a] border-[#444444]"
+                                            />
+                                            <span className="text-xs text-gray-300">Cloud</span>
+                                        </label>
+                                    </div>
+
                                     <label className="block text-xs text-gray-400 mb-1">Database Name</label>
                                     <input
                                         type="text"
                                         value={dbName}
                                         onChange={(e) => handleChange('dbName', e.target.value)}
                                         placeholder="e.g. users_db"
-                                        className="w-full bg-[#1a1a1a] border border-[#444444] rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                                        className="w-full bg-[#1a1a1a] border border-[#444444] rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none transition-colors mb-2"
                                     />
+
+                                    {selectedNode.data?.dbMode === 'cloud' && (
+                                        <div className="space-y-2 pl-2 border-l border-[#444444]">
+                                            <div>
+                                                <label className="block text-[10px] text-gray-500 uppercase mb-1">Host / Connection String</label>
+                                                <input
+                                                    type="text"
+                                                    value={selectedNode.data?.dbHost || ''}
+                                                    onChange={(e) => handleChange('dbHost', e.target.value)}
+                                                    placeholder="e.g. my-db.aws.com"
+                                                    className="w-full bg-[#1a1a1a] border border-[#444444] rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] text-gray-500 uppercase mb-1">Username</label>
+                                                <input
+                                                    type="text"
+                                                    value={selectedNode.data?.dbUser || ''}
+                                                    onChange={(e) => handleChange('dbUser', e.target.value)}
+                                                    placeholder="admin"
+                                                    className="w-full bg-[#1a1a1a] border border-[#444444] rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] text-gray-500 uppercase mb-1">Password</label>
+                                                <input
+                                                    type="password"
+                                                    value={selectedNode.data?.dbPassword || ''}
+                                                    onChange={(e) => handleChange('dbPassword', e.target.value)}
+                                                    placeholder="••••••"
+                                                    className="w-full bg-[#1a1a1a] border border-[#444444] rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
+            </div>
+            {/* Delete Button */}
+            <div className="mt-8 pt-4 border-t border-[#444444]">
+                <button
+                    onClick={onDelete}
+                    className="w-full bg-red-600/20 hover:bg-red-600/40 text-red-400 hover:text-red-300 border border-red-600/50 rounded px-3 py-2 text-sm transition-colors flex items-center justify-center"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete {type}
+                </button>
             </div>
         </div>
     );

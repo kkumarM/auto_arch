@@ -1,0 +1,306 @@
+import React, { useCallback, useState, useImperativeHandle, forwardRef } from 'react';
+import ReactFlow, {
+    addEdge,
+    useNodesState,
+    useEdgesState,
+    Controls,
+    Background,
+    MiniMap,
+    ConnectionMode,
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+import CustomNode from './CustomNode';
+import CustomEdge from './CustomEdge';
+import GroupNode from './GroupNode';
+import { api } from "../../../lib/api";
+
+const nodeTypes = {
+    custom: CustomNode,
+    group: GroupNode,
+};
+
+const edgeTypes = {
+    custom: CustomEdge,
+};
+
+const defaultEdgeOptions = {
+    type: 'custom',
+    animated: true,
+    style: { stroke: '#3b82f6', strokeWidth: 2 },
+};
+
+let id = 0;
+const getId = () => `dndnode_${id++}`;
+
+const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
+    const initialNodes = [];
+    const initialEdges = [];
+
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [locked, setLocked] = useState(false);
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    // Expose methods to parent via ref
+    useImperativeHandle(ref, () => ({
+        getDiagram: () => {
+            if (!reactFlowInstance) return { nodes: [], edges: [] };
+            return reactFlowInstance.toObject();
+        },
+        loadTemplate: async (templateId) => {
+            try {
+                const template = await api.getTemplate(templateId);
+                setNodes(template.nodes || []);
+                setEdges(template.edges || []);
+            } catch (error) {
+                console.error("Error loading template:", error);
+                alert(`Error loading template: ${error.message}`);
+            }
+        },
+        loadDiagram: (diagram) => {
+            if (!diagram) return;
+            setNodes(diagram.nodes || []);
+            setEdges(diagram.edges || []);
+        },
+        updateNodeData: (nodeId, newData) => {
+            setNodes((nds) =>
+                nds.map((node) => {
+                    if (node.id === nodeId) {
+                        return { ...node, data: { ...node.data, ...newData } };
+                    }
+                    return node;
+                })
+            );
+        },
+        updateEdgeData: (edgeId, newData) => {
+            setEdges((eds) =>
+                eds.map((edge) => {
+                    if (edge.id === edgeId) {
+                        return { ...edge, data: { ...edge.data, ...newData } };
+                    }
+                    return edge;
+                })
+            );
+        },
+        deleteElement: (id) => {
+            setNodes((nds) => nds.filter((n) => n.id !== id));
+            setEdges((eds) => eds.filter((e) => e.id !== id));
+        }
+    }));
+
+    const onConnect = useCallback(
+        (params) => setEdges((eds) => addEdge(params, eds)),
+        [setEdges],
+    );
+
+    // Handle drop event from sidebar
+    const onDrop = useCallback(
+        (event) => {
+            event.preventDefault();
+
+            const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+            const type = event.dataTransfer.getData("application/reactflow");
+            const label = event.dataTransfer.getData("application/reactflow/label");
+            const icon = event.dataTransfer.getData("application/reactflow/icon");
+            const color = event.dataTransfer.getData("application/reactflow/color");
+
+            console.debug('[Canvas] drop data', { type, label, icon, color, reactFlowInstance });
+
+            // Check if the dropped element is valid
+            if (typeof type === "undefined" || !type) {
+                return;
+            }
+
+            let position;
+            if (reactFlowInstance && typeof reactFlowInstance.project === 'function') {
+                position = reactFlowInstance.project({
+                    x: event.clientX - reactFlowBounds.left,
+                    y: event.clientY - reactFlowBounds.top,
+                });
+            } else {
+                // Fallback: use raw client coords relative to canvas when instance not ready
+                position = {
+                    x: event.clientX - reactFlowBounds.left,
+                    y: event.clientY - reactFlowBounds.top,
+                };
+                console.warn('ReactFlow instance not ready — using fallback coordinates for drop.');
+            }
+
+            console.debug('[Canvas] computed position', position);
+
+            const isGroup = type === 'group';
+            const newNode = {
+                id: getId(),
+                type: isGroup ? 'group' : 'custom', // Force 'custom' for non-group nodes
+                position,
+                data: { label: label || type, type: type, icon: icon, color: color, _justDropped: true },
+                // Keep visual defaults for groups
+                style: isGroup ? { width: 300, height: 200, zIndex: -1 } : undefined,
+            };
+
+            setNodes((nds) => nds.concat(newNode));
+
+            // Clear the `_justDropped` flag after a short delay so users can visually validate the drop
+            const dropHighlightTimeout = 1500;
+            setTimeout(() => {
+                setNodes((nds) => nds.map((n) => (n.id === newNode.id ? { ...n, data: { ...n.data, _justDropped: false } } : n)));
+            }, dropHighlightTimeout);
+
+            // Log new nodes after state update
+            setTimeout(() => {
+                try {
+                    console.debug('[Canvas] nodes after drop', reactFlowInstance ? reactFlowInstance.toObject().nodes : null);
+                } catch (e) {
+                    console.debug('[Canvas] nodes after drop (no instance)', nodes.concat(newNode));
+                }
+            }, 50);
+            setIsDragOver(false);
+        },
+        [reactFlowInstance, setNodes],
+    );
+
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        setIsDragOver(true);
+    }, []);
+
+    const onDragLeave = useCallback((event) => {
+        // Prevent flickering when dragging over children
+        if (event.currentTarget.contains(event.relatedTarget)) {
+            return;
+        }
+        setIsDragOver(false);
+    }, []);
+
+    const onNodeClick = useCallback((event, node) => {
+        if (onNodeSelect) {
+            onNodeSelect(node); // Pass the whole node object
+        }
+    }, [onNodeSelect]);
+
+    const onEdgeClick = useCallback((event, edge) => {
+        if (onNodeSelect) {
+            onNodeSelect(edge); // Reuse onNodeSelect for edges too, or rename prop to onElementSelect
+        }
+    }, [onNodeSelect]);
+
+    const onPaneClick = useCallback(() => {
+        if (onNodeSelect) {
+            onNodeSelect(null);
+        }
+    }, [onNodeSelect]);
+
+    // Memoize node/edge type objects so React Flow receives stable references
+    const memoizedNodeTypes = React.useMemo(() => nodeTypes, []);
+    const memoizedEdgeTypes = React.useMemo(() => edgeTypes, []);
+
+    return (
+        <div
+            className="h-full w-full bg-[#020617] relative overflow-hidden"
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+        >
+            {/* Grid Background Effect */}
+            <div className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                    backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)',
+                    backgroundSize: '20px 20px'
+                }}
+            ></div>
+
+            <ReactFlow
+                nodesDraggable={!locked}
+                nodesConnectable={!locked}
+                elementsSelectable={!locked}
+                panOnDrag={!locked}
+                panOnScroll={!locked}
+                zoomOnScroll={!locked}
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onInit={setReactFlowInstance}
+                onNodeClick={onNodeClick}
+                onEdgeClick={onEdgeClick}
+                onPaneClick={onPaneClick}
+                nodeTypes={memoizedNodeTypes}
+                edgeTypes={memoizedEdgeTypes}
+                defaultEdgeOptions={defaultEdgeOptions}
+                connectionMode={ConnectionMode.Loose} // Enable loose connections
+                fitView
+                className="bg-[#020617]"
+            >
+                <Background color="#3b82f6" gap={20} size={1} variant="dots" className="opacity-10" />
+                <Controls className="bg-[#1e293b] border border-white/10 text-white fill-white [&>button]:!border-white/10 [&>button:hover]:!bg-blue-600" />
+                <MiniMap
+                    nodeColor={() => '#3b82f6'}
+                    maskColor="rgba(2, 6, 23, 0.7)"
+                    className="!bg-[#1e293b] !border-white/10 !rounded-lg !shadow-xl"
+                />
+            </ReactFlow>
+
+            {/* Drag overlay highlight */}
+            {isDragOver && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30 bg-blue-500/5 transition-all duration-300">
+                    <div className="w-3/4 h-3/4 border-2 border-dashed border-blue-500/60 rounded-2xl backdrop-blur-sm bg-blue-500/10 flex items-center justify-center">
+                        <span className="text-blue-400 font-medium text-lg animate-pulse">Drop Component Here</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Floating Controls (zoom / fit / lock) */}
+            <div className="absolute left-6 top-1/2 transform -translate-y-1/2 z-40 flex flex-col gap-2">
+                <button
+                    aria-label="zoom in"
+                    onClick={() => reactFlowInstance && reactFlowInstance.zoomIn()}
+                    className="w-10 h-10 rounded-md bg-[#0f172a]/80 border border-white/6 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+
+                <button
+                    aria-label="zoom out"
+                    onClick={() => reactFlowInstance && reactFlowInstance.zoomOut()}
+                    className="w-10 h-10 rounded-md bg-[#0f172a]/80 border border-white/6 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                    </svg>
+                </button>
+
+                <button
+                    aria-label="fit view"
+                    onClick={() => reactFlowInstance && reactFlowInstance.fitView()}
+                    className="w-10 h-10 rounded-md bg-[#0f172a]/80 border border-white/6 text-white flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7V4h3M20 7V4h-3M4 17v3h3M20 17v3h-3" />
+                    </svg>
+                </button>
+
+                <button
+                    aria-label={locked ? 'unlock canvas' : 'lock canvas'}
+                    onClick={() => setLocked((v) => !v)}
+                    className={`w-10 h-10 rounded-md border text-white flex items-center justify-center shadow-lg transition-colors ${locked ? 'bg-blue-600 border-blue-500' : 'bg-[#0f172a]/80 border-white/6 hover:bg-blue-600'}`}
+                >
+                    {locked ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /><path fillRule="evenodd" d="M6 9V7a6 6 0 1112 0v2h1a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a2 2 0 012-2h1zm2 0h8V7a4 4 0 10-8 0v2z" clipRule="evenodd" /></svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11V7a4 4 0 10-8 0v4" /><rect x="4" y="11" width="16" height="10" rx="2" ry="2" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11v1" /></svg>
+                    )}
+                </button>
+            </div>
+
+            {/* Lock overlay toggle - when enabled, this blocks interactions */}
+            {/* We'll add a small lock toggle in the floating controls area */}
+        </div>
+    );
+});
+
+export default Canvas;

@@ -72,24 +72,79 @@ TEMPLATES = {
     },
     "react": {
         "nodes": [
-            {"id": "1", "type": "custom", "position": {"x": 100, "y": 100}, "data": {"label": "React App", "type": "Web App", "icon": "Web"}},
-            {"id": "2", "type": "custom", "position": {"x": 400, "y": 100}, "data": {"label": "Load Balancer", "type": "Load Balancer", "icon": "Server"}},
-            {"id": "3", "type": "custom", "position": {"x": 700, "y": 100}, "data": {"label": "API Gateway", "type": "API Gateway", "icon": "Gateway"}}
+            # Frontend Layer
+            {"id": "c1", "type": "custom", "position": {"x": 50, "y": 250}, "data": {"label": "React SPA", "type": "Web App", "icon": "Web", "color": "bg-blue-500"}},
+            {"id": "cdn1", "type": "custom", "position": {"x": 50, "y": 400}, "data": {"label": "CDN", "type": "CDN", "icon": "Cloud", "color": "bg-cyan-500"}},
+
+            # Gateway Layer
+            {"id": "lb1", "type": "custom", "position": {"x": 300, "y": 250}, "data": {"label": "Load Balancer", "type": "Load Balancer", "icon": "LoadBalancer", "color": "bg-blue-500"}},
+            {"id": "g1", "type": "custom", "position": {"x": 500, "y": 250}, "data": {"label": "API Gateway", "type": "API Gateway", "icon": "Gateway", "color": "bg-orange-500"}},
+
+            # Services Layer
+            {"id": "s1", "type": "custom", "position": {"x": 750, "y": 100}, "data": {"label": "Auth Service", "type": "Auth Service", "icon": "Key", "color": "bg-blue-500"}},
+            {"id": "s2", "type": "custom", "position": {"x": 750, "y": 250}, "data": {"label": "User Service", "type": "Microservice", "icon": "Microservice", "color": "bg-green-600"}},
+            {"id": "s3", "type": "custom", "position": {"x": 750, "y": 400}, "data": {"label": "Product Service", "type": "Microservice", "icon": "Microservice", "color": "bg-green-600"}},
+
+            # Data Layer
+            {"id": "d1", "type": "custom", "position": {"x": 1000, "y": 100}, "data": {"label": "Auth DB", "type": "Database", "icon": "Database", "color": "bg-red-600"}},
+            {"id": "d2", "type": "custom", "position": {"x": 1000, "y": 250}, "data": {"label": "Main DB", "type": "Database", "icon": "Database", "color": "bg-red-600"}},
+            {"id": "d3", "type": "custom", "position": {"x": 1000, "y": 400}, "data": {"label": "Redis Cache", "type": "Redis", "icon": "Redis", "color": "bg-red-500"}},
         ],
         "edges": [
-            {"id": "e1-2", "source": "1", "target": "2"},
-            {"id": "e2-3", "source": "2", "target": "3"}
+            # Client -> Infra
+            {"id": "e1", "source": "c1", "target": "lb1", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e2", "source": "c1", "target": "cdn1", "sourceHandle": "bottom", "targetHandle": "top"},
+
+            # Infra -> Gateway
+            {"id": "e3", "source": "lb1", "target": "g1", "sourceHandle": "right", "targetHandle": "left"},
+
+            # Gateway -> Services
+            {"id": "e4", "source": "g1", "target": "s1", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e5", "source": "g1", "target": "s2", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e6", "source": "g1", "target": "s3", "sourceHandle": "right", "targetHandle": "left"},
+
+            # Services -> Data
+            {"id": "e7", "source": "s1", "target": "d1", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e8", "source": "s2", "target": "d2", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e9", "source": "s3", "target": "d2", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e10", "source": "s3", "target": "d3", "sourceHandle": "right", "targetHandle": "left"},
         ]
     },
     "nextjs": {
         "nodes": [
-            {"id": "1", "type": "custom", "position": {"x": 100, "y": 100}, "data": {"label": "Next.js App", "type": "Web App", "icon": "Web"}},
-            {"id": "2", "type": "custom", "position": {"x": 400, "y": 100}, "data": {"label": "API Gateway", "type": "API Gateway", "icon": "Gateway"}},
-            {"id": "3", "type": "custom", "position": {"x": 700, "y": 100}, "data": {"label": "Database", "type": "Database", "icon": "Database"}}
+            # App Layer
+            {"id": "c1", "type": "custom", "position": {"x": 50, "y": 250}, "data": {"label": "Next.js App", "type": "Web App", "icon": "Web", "color": "bg-black"}},
+            
+            # Gateway/Service Layer
+            {"id": "g1", "type": "custom", "position": {"x": 300, "y": 250}, "data": {"label": "API Gateway", "type": "API Gateway", "icon": "Gateway", "color": "bg-orange-500"}},
+            {"id": "s1", "type": "custom", "position": {"x": 550, "y": 100}, "data": {"label": "Auth Service", "type": "Auth Service", "icon": "Key", "color": "bg-blue-500"}},
+            
+            # Data Layer
+            {"id": "d1", "type": "custom", "position": {"x": 800, "y": 100}, "data": {"label": "Postgres DB", "type": "Database", "icon": "Database", "color": "bg-blue-600"}},
+            {"id": "d2", "type": "custom", "position": {"x": 800, "y": 250}, "data": {"label": "Redis Cache", "type": "Redis", "icon": "Redis", "color": "bg-red-500"}},
+
+            # External Services
+            {"id": "ext1", "type": "custom", "position": {"x": 800, "y": 400}, "data": {"label": "Stripe", "type": "Management", "icon": "Cloud", "color": "bg-indigo-500"}},
+            {"id": "ext2", "type": "custom", "position": {"x": 800, "y": 500}, "data": {"label": "Analytics", "type": "Management", "icon": "Chart", "color": "bg-yellow-500"}},
         ],
         "edges": [
-            {"id": "e1-2", "source": "1", "target": "2"},
-            {"id": "e2-3", "source": "2", "target": "3"}
+            # App -> Gateway
+            {"id": "e1", "source": "c1", "target": "g1", "sourceHandle": "right", "targetHandle": "left"},
+
+            # Gateway -> Services/Data
+            {"id": "e2", "source": "g1", "target": "s1", "sourceHandle": "right", "targetHandle": "left"},
+            {"id": "e3", "source": "g1", "target": "d1", "sourceHandle": "right", "targetHandle": "left"}, # Direct DB access (common in Next.js)
+            {"id": "e4", "source": "g1", "target": "d2", "sourceHandle": "right", "targetHandle": "left"},
+
+            # Services -> Data
+            {"id": "e5", "source": "s1", "target": "d1", "sourceHandle": "right", "targetHandle": "left"},
+
+            # App -> External
+            {"id": "e6", "source": "c1", "target": "ext1", "sourceHandle": "bottom", "targetHandle": "left"},
+            {"id": "e7", "source": "c1", "target": "ext2", "sourceHandle": "bottom", "targetHandle": "left"},
         ]
     }
 }
+
+def get_template_by_id(template_id: str):
+    return TEMPLATES.get(template_id)

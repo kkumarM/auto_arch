@@ -49,6 +49,11 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
                 alert(`Error loading template: ${error.message}`);
             }
         },
+        loadDiagram: (diagram) => {
+            if (!diagram) return;
+            setNodes(diagram.nodes || []);
+            setEdges(diagram.edges || []);
+        },
         updateNodeData: (nodeId, newData) => {
             setNodes((nds) =>
                 nds.map((node) => {

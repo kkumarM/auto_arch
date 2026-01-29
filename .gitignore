@@ -9,7 +9,7 @@ __pycache__/
 *$py.class
 venv/
 # Virtual Environment (auto_arch)
-auto_arch/
+/auto_arch/
 .venv/
 backend/venv/
 *.env
