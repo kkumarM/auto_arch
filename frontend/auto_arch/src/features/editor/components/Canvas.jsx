@@ -12,6 +12,7 @@ import CustomNode from './CustomNode';
 import CustomEdge from './CustomEdge';
 import GroupNode from './GroupNode';
 import { api } from "../../../lib/api";
+import { normalizeTemplateGraph } from "../utils/normalizeTemplate";
 
 const nodeTypes = {
     custom: CustomNode,
@@ -24,48 +25,6 @@ const edgeTypes = {
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
-
-// Normalize template graphs to ensure visibility and sane layout
-const normalizeTemplateGraph = (nodes = [], edges = []) => {
-    const spacingX = 260;
-    const spacingY = 180;
-    const normalizedNodes = nodes.map((node, idx) => {
-        const hasPos = node && node.position && typeof node.position.x === 'number' && typeof node.position.y === 'number';
-        const gridX = (idx % 4) * spacingX;
-        const gridY = Math.floor(idx / 4) * spacingY;
-        return {
-            id: node.id || `n-${idx}`,
-            type: node.type || 'custom',
-            data: node.data || { label: `Node ${idx + 1}`, type: node.type || 'custom' },
-            position: hasPos ? node.position : { x: gridX, y: gridY },
-        };
-    });
-
-    // Recenter so minX/minY start near (120,120)
-    const minX = Math.min(...normalizedNodes.map((n) => n.position.x));
-    const minY = Math.min(...normalizedNodes.map((n) => n.position.y));
-    const offsetX = 120 - minX;
-    const offsetY = 120 - minY;
-    const recenteredNodes = normalizedNodes.map((n) => ({
-        ...n,
-        position: {
-            x: n.position.x + offsetX,
-            y: n.position.y + offsetY,
-        },
-    }));
-
-    const normalizedEdges = edges.map((edge, idx) => ({
-        id: edge.id || `e-${edge.source || 's'}-${edge.target || 't'}-${idx}`,
-        source: edge.source,
-        target: edge.target,
-        sourceHandle: edge.sourceHandle,
-        targetHandle: edge.targetHandle,
-        type: edge.type,
-        data: edge.data || {},
-    }));
-
-    return { nodes: recenteredNodes, edges: normalizedEdges };
-};
 
 const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, ref) => {
     const initialNodes = [];
@@ -99,8 +58,22 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
         },
         loadDiagram: (diagram) => {
             if (!diagram) return;
-            setNodes(diagram.nodes || []);
-            setEdges(diagram.edges || []);
+            const { nodes: normNodes, edges: normEdges } = normalizeTemplateGraph(diagram.nodes, diagram.edges);
+            setNodes(normNodes);
+            setEdges(normEdges);
+            if (process.env.NODE_ENV !== "production") {
+                console.debug("[Diagram] loaded", { nodes: normNodes.length, edges: normEdges.length });
+            }
+            setTemplateApplied(true);
+        },
+        applyTemplateGraph: (graph) => {
+            const { nodes: normNodes, edges: normEdges } = normalizeTemplateGraph(graph.nodes, graph.edges);
+            setNodes(normNodes);
+            setEdges(normEdges);
+            if (process.env.NODE_ENV !== "production") {
+                console.debug("[Template] applied (local)", { nodes: normNodes.length, edges: normEdges.length });
+            }
+            setTemplateApplied(true);
         },
         updateNodeData: (nodeId, newData) => {
             setNodes((nds) =>

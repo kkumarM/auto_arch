@@ -8,6 +8,7 @@ import Button from "../../components/ui/Button";
 import { generateCode, generateFromPrompt } from "../../lib/api";
 import { reactFlowToSpecV1 } from "../../spec/archSpecV1";
 import { api } from "../../lib/api";
+import TemplatesPanel from "./components/TemplatesPanel";
 
 export default function EditorPage({ projectConfig, onBack }) {
     const [isGenerating, setIsGenerating] = useState(false);
@@ -16,6 +17,8 @@ export default function EditorPage({ projectConfig, onBack }) {
     const [projectName, setProjectName] = useState(projectConfig?.name || 'my-awesome-project');
     const [validationErrors, setValidationErrors] = useState([]);
     const [errorNodeIds, setErrorNodeIds] = useState([]);
+    const [templatesOpen, setTemplatesOpen] = useState(false);
+    const [statusMessage, setStatusMessage] = useState('');
     const canvasRef = useRef(null);
     const USE_SPEC_V1_GENERATE = false; // Feature flag to keep legacy generate path intact
 
@@ -96,6 +99,7 @@ export default function EditorPage({ projectConfig, onBack }) {
     const handleGenerateCode = async () => {
         if (!canvasRef.current) return;
         setIsGenerating(true);
+        setStatusMessage('Sending diagram...');
         try {
             const diagram = canvasRef.current.getDiagram();
             let payload = { ...diagram, project_name: projectName };
@@ -106,9 +110,11 @@ export default function EditorPage({ projectConfig, onBack }) {
             }
 
             const response = await generateCode(payload);
-            alert(`Code generated successfully at: ${response.path}`);
+            setStatusMessage(`Done. Generated at: ${response.path || 'output folder'}`);
+            alert(`Code generated successfully at: ${response.path || 'output folder'}`);
         } catch (error) {
             console.error("Error generating code:", error);
+            setStatusMessage('Error generating code.');
             alert("Failed to generate code. See console for details.");
         } finally {
             setIsGenerating(false);
@@ -153,6 +159,15 @@ export default function EditorPage({ projectConfig, onBack }) {
         }
     };
 
+    const handleSelectTemplate = (tpl) => {
+        if (canvasRef.current?.applyTemplateGraph) {
+            canvasRef.current.applyTemplateGraph(tpl.graph);
+            setProjectName(tpl.projectName || projectName);
+            setTemplatesOpen(false);
+            setStatusMessage(`Template loaded: ${tpl.name}`);
+        }
+    };
+
     return (
         <MainLayout
             header={
@@ -187,6 +202,14 @@ export default function EditorPage({ projectConfig, onBack }) {
                         >
                             Back
                         </button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setTemplatesOpen(true)}
+                            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] border-none"
+                        >
+                            Templates
+                        </Button>
                         <Button
                             variant="secondary"
                             size="sm"
@@ -273,6 +296,18 @@ export default function EditorPage({ projectConfig, onBack }) {
                     )}
                 </div>
             </div>
+
+            {statusMessage && (
+                <div className="px-4 py-2 text-sm text-gray-300 bg-[#0b1224] border-t border-white/5">
+                    {statusMessage}
+                </div>
+            )}
+
+            <TemplatesPanel
+                open={templatesOpen}
+                onClose={() => setTemplatesOpen(false)}
+                onSelect={handleSelectTemplate}
+            />
         </MainLayout>
     );
 }

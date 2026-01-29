@@ -95,6 +95,31 @@ const CustomNode = ({ id, data, selected }) => {
 
     const getGradient = () => GRADIENTS[colorKey] || GRADIENTS.blue;
     const getGlowColor = () => GLOWS[colorKey] || GLOWS.blue;
+    const BORDER = {
+        red: "border-red-400",
+        orange: "border-orange-400",
+        yellow: "border-yellow-400",
+        amber: "border-amber-400",
+        green: "border-green-400",
+        emerald: "border-emerald-400",
+        lime: "border-lime-400",
+        teal: "border-teal-400",
+        cyan: "border-cyan-400",
+        sky: "border-sky-400",
+        blue: "border-blue-400",
+        indigo: "border-indigo-400",
+        violet: "border-violet-400",
+        purple: "border-purple-400",
+        pink: "border-pink-400",
+        rose: "border-rose-400",
+        gray: "border-gray-400",
+        slate: "border-slate-400",
+        zinc: "border-zinc-400",
+        neutral: "border-neutral-400",
+        stone: "border-stone-400",
+        black: "border-gray-500",
+    };
+    const borderClass = BORDER[colorKey] || BORDER.blue;
 
     // Apply a strong visible outline when a node was just dropped to make validation obvious
     const justDroppedClass = data && data._justDropped ? 'ring-4 ring-blue-400/60 animate-pulse' : '';
@@ -102,7 +127,7 @@ const CustomNode = ({ id, data, selected }) => {
 
     return (
         <div className={`
-            relative min-w-[180px] rounded-xl transition-all duration-300 group
+            relative min-w-[180px] rounded-xl transition-all duration-300 group border-2 ${borderClass}
             ${selected ? `shadow-[0_0_30px_rgba(255,255,255,0.1)] scale-105 z-50 ${getGlowColor().split(' ')[0]}` : 'shadow-lg hover:shadow-blue-500/20'}
             ${justDroppedClass} ${errorClass}
         `}>
