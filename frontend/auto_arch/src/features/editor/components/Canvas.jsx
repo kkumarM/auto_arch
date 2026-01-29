@@ -6,6 +6,7 @@ import ReactFlow, {
     useEdgesState,
     Controls,
     Background,
+    MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import CustomNode from './CustomNode';
@@ -233,7 +234,15 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
                 onPaneClick={onPaneClick}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
-                defaultEdgeOptions={{ type: 'custom' }}
+                defaultEdgeOptions={{
+                    type: 'custom',
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: '#9ca3af',
+                        width: 16,
+                        height: 16,
+                    },
+                }}
                 fitView
                 className="bg-[#1a1a1a]"
             >
