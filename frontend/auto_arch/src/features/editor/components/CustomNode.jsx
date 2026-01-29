@@ -40,41 +40,71 @@ const CustomNode = ({ id, data, selected }) => {
         }
     };
 
-    // Helper to get gradient based on color class
-    const getGradient = () => {
-        const color = data.color || 'bg-blue-500';
-        // Map common tailwind colors to gradients
-        if (color.includes('red')) return 'from-red-600 to-red-400';
-        if (color.includes('green')) return 'from-green-600 to-green-400';
-        if (color.includes('yellow')) return 'from-yellow-600 to-yellow-400';
-        if (color.includes('orange')) return 'from-orange-600 to-orange-400';
-        if (color.includes('purple')) return 'from-purple-600 to-purple-400';
-        if (color.includes('pink')) return 'from-pink-600 to-pink-400';
-        if (color.includes('cyan')) return 'from-cyan-600 to-cyan-400';
-        if (color.includes('teal')) return 'from-teal-600 to-teal-400';
-        if (color.includes('indigo')) return 'from-indigo-600 to-indigo-400';
-        if (color.includes('gray') || color.includes('slate')) return 'from-gray-600 to-gray-400';
-        return 'from-blue-600 to-blue-400'; // Default
+    const colorClass = data.color || 'bg-blue-500';
+    const colorKey = colorClass.replace(/^bg-/, '').split('-')[0]; // e.g. bg-blue-600 -> blue
+
+    const GRADIENTS = {
+        red: 'from-red-600 to-red-400',
+        orange: 'from-orange-600 to-orange-400',
+        yellow: 'from-yellow-600 to-yellow-400',
+        amber: 'from-amber-600 to-amber-400',
+        green: 'from-green-600 to-green-400',
+        emerald: 'from-emerald-600 to-emerald-400',
+        lime: 'from-lime-600 to-lime-400',
+        teal: 'from-teal-600 to-teal-400',
+        cyan: 'from-cyan-600 to-cyan-400',
+        sky: 'from-sky-600 to-sky-400',
+        blue: 'from-blue-600 to-blue-400',
+        indigo: 'from-indigo-600 to-indigo-400',
+        violet: 'from-violet-600 to-violet-400',
+        purple: 'from-purple-600 to-purple-400',
+        pink: 'from-pink-600 to-pink-400',
+        rose: 'from-rose-600 to-rose-400',
+        gray: 'from-gray-700 to-gray-500',
+        slate: 'from-slate-700 to-slate-500',
+        zinc: 'from-zinc-700 to-zinc-500',
+        neutral: 'from-neutral-700 to-neutral-500',
+        stone: 'from-stone-700 to-stone-500',
+        black: 'from-gray-900 to-gray-700',
     };
 
-    const getGlowColor = () => {
-        const color = data.color || 'bg-blue-500';
-        if (color.includes('red')) return 'shadow-red-500/50 border-red-500/50';
-        if (color.includes('green')) return 'shadow-green-500/50 border-green-500/50';
-        if (color.includes('yellow')) return 'shadow-yellow-500/50 border-yellow-500/50';
-        if (color.includes('orange')) return 'shadow-orange-500/50 border-orange-500/50';
-        if (color.includes('purple')) return 'shadow-purple-500/50 border-purple-500/50';
-        return 'shadow-blue-500/50 border-blue-500/50';
+    const GLOWS = {
+        red: 'shadow-red-500/50 border-red-500/50',
+        orange: 'shadow-orange-500/50 border-orange-500/50',
+        yellow: 'shadow-yellow-500/50 border-yellow-500/50',
+        amber: 'shadow-amber-500/50 border-amber-500/50',
+        green: 'shadow-green-500/50 border-green-500/50',
+        emerald: 'shadow-emerald-500/50 border-emerald-500/50',
+        lime: 'shadow-lime-500/50 border-lime-500/50',
+        teal: 'shadow-teal-500/50 border-teal-500/50',
+        cyan: 'shadow-cyan-500/50 border-cyan-500/50',
+        sky: 'shadow-sky-500/50 border-sky-500/50',
+        blue: 'shadow-blue-500/50 border-blue-500/50',
+        indigo: 'shadow-indigo-500/50 border-indigo-500/50',
+        violet: 'shadow-violet-500/50 border-violet-500/50',
+        purple: 'shadow-purple-500/50 border-purple-500/50',
+        pink: 'shadow-pink-500/50 border-pink-500/50',
+        rose: 'shadow-rose-500/50 border-rose-500/50',
+        gray: 'shadow-gray-500/50 border-gray-500/50',
+        slate: 'shadow-slate-500/50 border-slate-500/50',
+        zinc: 'shadow-zinc-500/50 border-zinc-500/50',
+        neutral: 'shadow-neutral-500/50 border-neutral-500/50',
+        stone: 'shadow-stone-500/50 border-stone-500/50',
+        black: 'shadow-gray-700/50 border-gray-700/50',
     };
+
+    const getGradient = () => GRADIENTS[colorKey] || GRADIENTS.blue;
+    const getGlowColor = () => GLOWS[colorKey] || GLOWS.blue;
 
     // Apply a strong visible outline when a node was just dropped to make validation obvious
     const justDroppedClass = data && data._justDropped ? 'ring-4 ring-blue-400/60 animate-pulse' : '';
+    const errorClass = data && data._error ? 'ring-2 ring-red-400/70' : '';
 
     return (
         <div className={`
             relative min-w-[180px] rounded-xl transition-all duration-300 group
             ${selected ? `shadow-[0_0_30px_rgba(255,255,255,0.1)] scale-105 z-50 ${getGlowColor().split(' ')[0]}` : 'shadow-lg hover:shadow-blue-500/20'}
-            ${justDroppedClass}
+            ${justDroppedClass} ${errorClass}
         `}>
             {/* Glassmorphic Background */}
             <div className={`absolute inset-0 bg-[#1e293b]/90 backdrop-blur-xl rounded-xl border overflow-hidden ${selected ? 'border-blue-400' : 'border-white/10'}`}>

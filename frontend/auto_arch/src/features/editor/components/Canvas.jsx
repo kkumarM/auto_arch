@@ -25,7 +25,7 @@ const edgeTypes = {
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
-const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
+const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, ref) => {
     const initialNodes = [];
     const initialEdges = [];
 
@@ -77,6 +77,17 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
         deleteElement: (id) => {
             setNodes((nds) => nds.filter((n) => n.id !== id));
             setEdges((eds) => eds.filter((e) => e.id !== id));
+        },
+        selectNodeById: (nodeId) => {
+            setNodes((nds) => {
+                const next = nds.map((n) => ({
+                    ...n,
+                    selected: n.id === nodeId,
+                }));
+                const found = next.find((n) => n.id === nodeId);
+                if (found && onNodeSelect) onNodeSelect(found);
+                return next;
+            });
         }
     }));
 
@@ -142,6 +153,20 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId }, ref) => {
             onNodeSelect(null);
         }
     }, [onNodeSelect]);
+
+    // Highlight nodes with validation errors
+    React.useEffect(() => {
+        if (!errorNodeIds || errorNodeIds.length === 0) {
+            setNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, _error: false } })));
+            return;
+        }
+        setNodes((nds) =>
+            nds.map((n) => ({
+                ...n,
+                data: { ...n.data, _error: errorNodeIds.includes(n.id) },
+            }))
+        );
+    }, [errorNodeIds, setNodes]);
 
     return (
         <div className="flex-grow h-full relative bg-[#2d2d2d]">

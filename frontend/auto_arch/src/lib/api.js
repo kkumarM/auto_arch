@@ -52,6 +52,16 @@ export const api = {
             throw new Error(`API Error: ${response.statusText}`);
         }
         return response.json();
+    },
+    validate: async (spec) => {
+        const response = await fetch(`${API_BASE_URL}/api/validate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(spec),
+        });
+        return handleResponse(response);
     }
     // Add put, delete, etc. as needed
 };

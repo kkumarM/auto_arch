@@ -5,6 +5,8 @@ from app.data.templates import get_template_by_id
 from app.services.ai_service import generate_diagram_from_prompt
 from pydantic import BaseModel
 from app.core.logger import logger
+from app.spec import ProjectSpec
+from app.validate.validate_spec import validate_spec
 
 router = APIRouter()
 
@@ -44,3 +46,18 @@ async def generate_from_prompt(request: PromptRequest):
     diagram = generate_diagram_from_prompt(request.prompt, request.projectType)
     log.info("ai_generation_success", nodes_count=len(diagram.nodes))
     return diagram
+
+
+@router.post("/api/validate")
+async def validate_project_spec(spec: ProjectSpec):
+    """
+    Validate a ProjectSpec v1 payload and return a flat list of errors.
+    """
+    log = logger.bind(project=spec.project.name, version=spec.version)
+    log.info("validate_spec_start")
+    errors = validate_spec(spec)
+    log.info("validate_spec_end", error_count=len(errors))
+    return {
+        "ok": len(errors) == 0,
+        "errors": [e.dict() for e in errors],
+    }

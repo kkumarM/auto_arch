@@ -6,12 +6,18 @@ import PropertiesPanel from "./components/PropertiesPanel";
 import MainLayout from "../../layouts/MainLayout";
 import Button from "../../components/ui/Button";
 import { generateCode, generateFromPrompt } from "../../lib/api";
+import { reactFlowToSpecV1 } from "../../spec/archSpecV1";
+import { api } from "../../lib/api";
 
 export default function EditorPage({ projectConfig, onBack }) {
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isValidating, setIsValidating] = useState(false);
     const [selectedNode, setSelectedNode] = useState(null);
     const [projectName, setProjectName] = useState(projectConfig?.name || 'my-awesome-project');
+    const [validationErrors, setValidationErrors] = useState([]);
+    const [errorNodeIds, setErrorNodeIds] = useState([]);
     const canvasRef = useRef(null);
+    const USE_SPEC_V1_GENERATE = false; // Feature flag to keep legacy generate path intact
 
     // Auto-load template or generate from AI
     React.useEffect(() => {
@@ -92,14 +98,52 @@ export default function EditorPage({ projectConfig, onBack }) {
         setIsGenerating(true);
         try {
             const diagram = canvasRef.current.getDiagram();
-            // Pass project name
-            const response = await generateCode({ ...diagram, project_name: projectName });
+            let payload = { ...diagram, project_name: projectName };
+
+            if (USE_SPEC_V1_GENERATE) {
+                const spec = buildSpecFromDiagram(diagram);
+                payload = { spec, project_name: projectName };
+            }
+
+            const response = await generateCode(payload);
             alert(`Code generated successfully at: ${response.path}`);
         } catch (error) {
             console.error("Error generating code:", error);
             alert("Failed to generate code. See console for details.");
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const buildSpecFromDiagram = (diagram) => {
+        return reactFlowToSpecV1(diagram.nodes || [], diagram.edges || [], {
+            projectName,
+            projectType: projectConfig?.projectType,
+            gateway: true,
+        });
+    };
+
+    const handleValidate = async () => {
+        if (!canvasRef.current) return;
+        setIsValidating(true);
+        try {
+            const diagram = canvasRef.current.getDiagram();
+            const spec = buildSpecFromDiagram(diagram);
+            const result = await api.validate(spec);
+            setValidationErrors(result.errors || []);
+            const nodesWithErrors = (result.errors || [])
+                .map((e) => e.nodeId)
+                .filter(Boolean);
+            setErrorNodeIds(nodesWithErrors);
+            if (result.ok) {
+                // Lightweight success indicator
+                console.log("Validation passed");
+            }
+        } catch (error) {
+            console.error("Validation error:", error);
+            alert("Failed to validate spec. See console for details.");
+        } finally {
+            setIsValidating(false);
         }
     };
 
@@ -166,6 +210,7 @@ export default function EditorPage({ projectConfig, onBack }) {
                         ref={canvasRef}
                         onNodeSelect={setSelectedNode}
                         selectedNodeId={selectedNode?.id}
+                        errorNodeIds={errorNodeIds}
                     />
                 </div>
 
@@ -177,6 +222,48 @@ export default function EditorPage({ projectConfig, onBack }) {
                         onClose={() => setSelectedNode(null)}
                     />
                 )}
+            </div>
+
+            {/* Validation panel */}
+            <div className="bg-[#0b1224] border-t border-white/5 px-4 py-3 flex items-start gap-4">
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleValidate}
+                        isLoading={isValidating}
+                    >
+                        Compile / Validate
+                    </Button>
+                    <span className="text-xs text-gray-500">
+                        Checks ports, duplicate IDs, and edge wiring.
+                    </span>
+                </div>
+                <div className="flex-1">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 mb-1">Validation</div>
+                    {validationErrors.length === 0 ? (
+                        <div className="text-sm text-green-400">No validation errors.</div>
+                    ) : (
+                        <ul className="space-y-1">
+                            {validationErrors.map((err, idx) => (
+                                <li key={`${err.message}-${idx}`} className="text-sm text-red-300 flex items-center gap-2">
+                                    <button
+                                        className="underline decoration-dotted hover:text-red-100"
+                                        onClick={() => {
+                                            if (err.nodeId && canvasRef.current?.selectNodeById) {
+                                                canvasRef.current.selectNodeById(err.nodeId);
+                                            }
+                                        }}
+                                    >
+                                        {err.message}
+                                        {err.nodeId ? ` (node ${err.nodeId})` : ''}
+                                        {err.edgeId ? ` (edge ${err.edgeId})` : ''}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
         </MainLayout>
     );

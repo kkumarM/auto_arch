@@ -22,6 +22,7 @@ AutoArch is a modern, web-based tool that allows developers to design software a
 -   **Frontend**: React.js, Tailwind CSS, React Flow
 -   **Backend**: Python, FastAPI
 -   **Infrastructure**: Docker, Nginx
+-   **Spec Contract**: Versioned Architecture Spec v1 (Pydantic / TypeScript) shared between frontend and backend.
 
 ## Getting Started
 
@@ -68,6 +69,13 @@ AutoArch is a modern, web-based tool that allows developers to design software a
     ```bash
     docker-compose up --build
     ```
+
+### Validation & Spec
+
+- **Spec models**: `backend/app/spec/arch_spec_v1.py` and `frontend/src/spec/archSpecV1.ts`
+- **Validate endpoint**: `POST /api/validate` with a Spec v1 payload; returns `{ ok, errors: [{message,nodeId?,edgeId?}] }`.
+- **Frontend converter**: ReactFlow diagram → Spec v1 via `reactFlowToSpecV1`.
+- Use the **Compile / Validate** button in the editor to see issues highlighted on the canvas.
 
 ## Contributing
 
