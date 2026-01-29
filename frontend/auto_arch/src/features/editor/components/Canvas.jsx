@@ -25,6 +25,48 @@ const edgeTypes = {
 let id = 0;
 const getId = () => `dndnode_${id++}`;
 
+// Normalize template graphs to ensure visibility and sane layout
+const normalizeTemplateGraph = (nodes = [], edges = []) => {
+    const spacingX = 260;
+    const spacingY = 180;
+    const normalizedNodes = nodes.map((node, idx) => {
+        const hasPos = node && node.position && typeof node.position.x === 'number' && typeof node.position.y === 'number';
+        const gridX = (idx % 4) * spacingX;
+        const gridY = Math.floor(idx / 4) * spacingY;
+        return {
+            id: node.id || `n-${idx}`,
+            type: node.type || 'custom',
+            data: node.data || { label: `Node ${idx + 1}`, type: node.type || 'custom' },
+            position: hasPos ? node.position : { x: gridX, y: gridY },
+        };
+    });
+
+    // Recenter so minX/minY start near (120,120)
+    const minX = Math.min(...normalizedNodes.map((n) => n.position.x));
+    const minY = Math.min(...normalizedNodes.map((n) => n.position.y));
+    const offsetX = 120 - minX;
+    const offsetY = 120 - minY;
+    const recenteredNodes = normalizedNodes.map((n) => ({
+        ...n,
+        position: {
+            x: n.position.x + offsetX,
+            y: n.position.y + offsetY,
+        },
+    }));
+
+    const normalizedEdges = edges.map((edge, idx) => ({
+        id: edge.id || `e-${edge.source || 's'}-${edge.target || 't'}-${idx}`,
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandle,
+        targetHandle: edge.targetHandle,
+        type: edge.type,
+        data: edge.data || {},
+    }));
+
+    return { nodes: recenteredNodes, edges: normalizedEdges };
+};
+
 const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, ref) => {
     const initialNodes = [];
     const initialEdges = [];
@@ -32,6 +74,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
+    const [templateApplied, setTemplateApplied] = React.useState(false);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -42,8 +85,13 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
         loadTemplate: async (templateId) => {
             try {
                 const template = await api.getTemplate(templateId);
-                setNodes(template.nodes || []);
-                setEdges(template.edges || []);
+                const { nodes: normNodes, edges: normEdges } = normalizeTemplateGraph(template.nodes, template.edges);
+                setNodes(normNodes);
+                setEdges(normEdges);
+                if (process.env.NODE_ENV !== "production") {
+                    console.debug("[Template] applied", { nodes: normNodes.length, edges: normEdges.length });
+                }
+                setTemplateApplied(true);
             } catch (error) {
                 console.error("Error loading template:", error);
                 alert(`Error loading template: ${error.message}`);
@@ -79,16 +127,26 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
             setEdges((eds) => eds.filter((e) => e.id !== id));
         },
         selectNodeById: (nodeId) => {
+            let target = null;
             setNodes((nds) => {
-                const next = nds.map((n) => ({
-                    ...n,
-                    selected: n.id === nodeId,
-                }));
-                const found = next.find((n) => n.id === nodeId);
-                if (found && onNodeSelect) onNodeSelect(found);
+                const next = nds.map((n) => {
+                    const isSel = n.id === nodeId;
+                    if (isSel) target = { ...n, selected: true };
+                    return { ...n, selected: isSel };
+                });
                 return next;
             });
-        }
+            if (target && onNodeSelect) {
+                // Defer to avoid setState during render warnings
+                queueMicrotask(() => onNodeSelect(target));
+            }
+        },
+        fitViewNow: () => {
+            if (reactFlowInstance) {
+                reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
+                reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+            }
+        },
     }));
 
     const onConnect = useCallback(
@@ -154,6 +212,17 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
         }
     }, [onNodeSelect]);
 
+    // Run fitView after template apply when nodes have been set
+    React.useEffect(() => {
+        if (!templateApplied || !reactFlowInstance) return;
+        const raf = requestAnimationFrame(() => {
+            reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
+            reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+        });
+        setTemplateApplied(false);
+        return () => cancelAnimationFrame(raf);
+    }, [templateApplied, reactFlowInstance]);
+
     // Highlight nodes with validation errors
     React.useEffect(() => {
         if (!errorNodeIds || errorNodeIds.length === 0) {
@@ -191,6 +260,12 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
                 <Background color="#444444" gap={16} />
                 <Controls className="bg-[#333333] border border-[#444444] shadow-sm rounded-md fill-white text-white [&>button]:!border-[#444444] [&>button]:!bg-[#333333] [&>button:hover]:!bg-[#444444] [&>button]:!fill-gray-200" />
             </ReactFlow>
+
+            {process.env.NODE_ENV !== "production" && (
+                <div className="absolute bottom-3 left-3 bg-black/50 text-gray-300 text-xs px-3 py-1 rounded border border-white/10 pointer-events-none">
+                    Nodes: {nodes.length} • Edges: {edges.length}
+                </div>
+            )}
         </div>
     );
 });

@@ -188,6 +188,14 @@ export default function EditorPage({ projectConfig, onBack }) {
                             Back
                         </button>
                         <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => canvasRef.current?.fitViewNow?.()}
+                            className="bg-[#3a3a3a] hover:bg-[#4a4a4a] border-none"
+                        >
+                            Fit View
+                        </Button>
+                        <Button
                             variant="primary"
                             size="sm"
                             onClick={handleGenerateCode}
