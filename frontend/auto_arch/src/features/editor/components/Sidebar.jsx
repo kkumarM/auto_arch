@@ -27,17 +27,30 @@ const webCategories = [
         items: [
             { type: "Load Balancer", label: "Load Balancer", color: "bg-blue-500", icon: "LoadBalancer" },
             { type: "Nginx", label: "Nginx", color: "bg-green-500", icon: "Nginx" },
+            { type: "API Gateway", label: "API Gateway", color: "bg-orange-500", icon: "Gateway" },
+            { type: "CDN", label: "CDN", color: "bg-cyan-500", icon: "Cloud" },
             { type: "Docker", label: "Docker Container", icon: "Docker" },
             { type: "Kubernetes", label: "Kubernetes Cluster", icon: "Kubernetes" },
+        ]
+    },
+    {
+        name: "Frontend",
+        items: [
+            { type: "Web App", label: "Web App", color: "bg-blue-600", icon: "Web" },
         ]
     },
     {
         name: "Backend Services",
         items: [
             { type: "Microservice", label: "Microservice", color: "bg-blue-400", icon: "Microservice" },
+            { type: "Auth Service", label: "Auth Service", color: "bg-blue-500", icon: "Key" },
+            { type: "Background Worker", label: "Worker", color: "bg-indigo-500", icon: "Settings" },
             { type: "Database", label: "Database", color: "bg-blue-600", icon: "Database" },
             { type: "Redis", label: "Redis Cache", color: "bg-red-500", icon: "Redis" },
             { type: "RabbitMQ/KAFKA", label: "Message Queue", color: "bg-blue-800", icon: "Queue" },
+            { type: "Object Storage", label: "Object Storage", color: "bg-amber-500", icon: "Cloud" },
+            { type: "Monitoring", label: "Monitoring", color: "bg-teal-600", icon: "Chart" },
+            { type: "Logging", label: "Log Service", color: "bg-gray-500", icon: "Log" },
         ]
     }
 ];
@@ -135,7 +148,7 @@ export default function Sidebar({ onLoadTemplate, projectType, onDragStart: exte
 
     return (
         <aside
-            className={`${isOpen ? 'w-72' : 'w-20'} bg-[#0f172a] border-r border-white/10 flex flex-col z-20 transition-all duration-300 ease-in-out relative shadow-2xl`}
+            className={`${isOpen ? 'w-72' : 'w-20'} bg-[#0f172a] border-r border-white/10 flex flex-col z-20 transition-all duration-300 ease-in-out relative shadow-2xl h-full min-h-0`}
         >
             <button
                 onClick={() => setIsOpen(!isOpen)}

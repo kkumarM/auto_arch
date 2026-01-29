@@ -35,6 +35,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [reactFlowInstance, setReactFlowInstance] = React.useState(null);
     const [templateApplied, setTemplateApplied] = React.useState(false);
+    const lastAutoFitCount = React.useRef(0);
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => ({
@@ -199,10 +200,23 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
         const raf = requestAnimationFrame(() => {
             reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
             reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+            lastAutoFitCount.current = nodes.length;
         });
         setTemplateApplied(false);
         return () => cancelAnimationFrame(raf);
-    }, [templateApplied, reactFlowInstance]);
+    }, [templateApplied, reactFlowInstance, nodes.length]);
+
+    // Safety: auto-fit once when nodes populate (e.g., initial load) if fit hasn't run
+    React.useEffect(() => {
+        if (!reactFlowInstance) return;
+        if (nodes.length === 0) return;
+        if (lastAutoFitCount.current === nodes.length) return;
+        const timeout = setTimeout(() => {
+            reactFlowInstance.fitView({ padding: 0.25, duration: 200 });
+            lastAutoFitCount.current = nodes.length;
+        }, 0);
+        return () => clearTimeout(timeout);
+    }, [nodes.length, reactFlowInstance]);
 
     // Highlight nodes with validation errors
     React.useEffect(() => {

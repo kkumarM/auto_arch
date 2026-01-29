@@ -231,12 +231,12 @@ export default function EditorPage({ projectConfig, onBack }) {
                 </div>
             }
         >
-            <div className="flex h-full overflow-hidden">
+            <div className="flex h-full flex-1 overflow-hidden min-h-0">
                 <Sidebar
                     projectType={projectConfig?.projectType}
                     onLoadTemplate={handleLoadTemplate} />
 
-                <div className="flex-grow relative">
+                <div className="flex-grow relative min-h-0">
                     <Canvas
                         ref={canvasRef}
                         onNodeSelect={setSelectedNode}
