@@ -199,7 +199,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
         if (!templateApplied || !reactFlowInstance) return;
         const raf = requestAnimationFrame(() => {
             reactFlowInstance.setViewport({ x: 0, y: 0, zoom: 1 });
-            reactFlowInstance.fitView({ padding: 0.2, duration: 300 });
+            reactFlowInstance.fitView({ padding: 0.15, duration: 300, minZoom: 0.2, maxZoom: 0.8 });
             lastAutoFitCount.current = nodes.length;
         });
         setTemplateApplied(false);
@@ -212,11 +212,28 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
         if (nodes.length === 0) return;
         if (lastAutoFitCount.current === nodes.length) return;
         const timeout = setTimeout(() => {
-            reactFlowInstance.fitView({ padding: 0.25, duration: 200 });
+            reactFlowInstance.fitView({ padding: 0.2, duration: 220, minZoom: 0.2, maxZoom: 0.8 });
             lastAutoFitCount.current = nodes.length;
         }, 0);
         return () => clearTimeout(timeout);
     }, [nodes.length, reactFlowInstance]);
+
+    // Re-fit on window resize to stay responsive
+    React.useEffect(() => {
+        if (!reactFlowInstance) return;
+        let resizeTimer;
+        const handleResize = () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                reactFlowInstance.fitView({ padding: 0.2, duration: 160, minZoom: 0.2, maxZoom: 0.8 });
+            }, 100);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => {
+            clearTimeout(resizeTimer);
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [reactFlowInstance]);
 
     // Highlight nodes with validation errors
     React.useEffect(() => {
@@ -233,7 +250,7 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
     }, [errorNodeIds, setNodes]);
 
     return (
-        <div className="flex-grow h-full relative bg-[#2d2d2d]">
+        <div className="flex-grow h-full min-h-0 relative bg-[#2d2d2d]">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
