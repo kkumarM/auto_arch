@@ -46,6 +46,24 @@ export default function CustomEdge({
                 style={{ ...style, stroke: isHovered ? '#3b82f6' : '#555' }}
             />
 
+            {/* Label always visible if provided */}
+            {data?.label && (
+                <EdgeLabelRenderer>
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                            pointerEvents: 'none',
+                        }}
+                        className="nodrag nopan"
+                    >
+                        <div className="bg-[#1f2937] text-gray-100 text-xs px-2 py-1 rounded shadow-sm border border-white/10">
+                            {data.label}
+                        </div>
+                    </div>
+                </EdgeLabelRenderer>
+            )}
+
             {isHovered && (
                 <div
                     style={{

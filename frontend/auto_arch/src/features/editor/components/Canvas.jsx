@@ -14,7 +14,6 @@ import CustomEdge from './CustomEdge';
 import GroupNode from './GroupNode';
 import { api } from "../../../lib/api";
 import { normalizeTemplateGraph } from "../utils/normalizeTemplate";
-
 const nodeTypes = {
     custom: CustomNode,
     group: GroupNode,
@@ -125,7 +124,26 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
     }));
 
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge(params, eds)),
+        (params) => {
+            setEdges((eds) => {
+                // Prevent self loops and duplicates
+                if (params.source === params.target) return eds;
+                if (eds.some((e) => e.source === params.source && e.target === params.target)) return eds;
+                const edge = {
+                    ...params,
+                    id: params.id || getId(),
+                    type: 'custom',
+                    data: { protocol: 'http', direction: 'uni', tls: false, label: '' },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: '#9ca3af',
+                        width: 16,
+                        height: 16,
+                    },
+                };
+                return addEdge(edge, eds);
+            });
+        },
         [setEdges],
     );
 
@@ -162,6 +180,12 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
                     type: draggedType,
                     icon: icon,
                     color: color,
+                    runtime: '',
+                    ports: [],
+                    env: {},
+                    storage: [],
+                    tls: false,
+                    description: '',
                 },
                 style: isGroup ? { width: 300, height: 200, zIndex: -1 } : undefined, // Default size and z-index for groups
             };

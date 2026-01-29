@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 // Force update
 import Sidebar from "./components/Sidebar";
 import Canvas from "./components/Canvas";
-import PropertiesPanel from "./components/PropertiesPanel";
+import InspectorPanel from "./components/InspectorPanel";
 import MainLayout from "../../layouts/MainLayout";
 import Button from "../../components/ui/Button";
 import { generateCode, generateFromPrompt } from "../../lib/api";
@@ -13,7 +13,7 @@ import TemplatesPanel from "./components/TemplatesPanel";
 export default function EditorPage({ projectConfig, onBack }) {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
-    const [selectedNode, setSelectedNode] = useState(null);
+    const [selectedElement, setSelectedElement] = useState(null);
     const [projectName, setProjectName] = useState(projectConfig?.name || 'my-awesome-project');
     const [validationErrors, setValidationErrors] = useState([]);
     const [errorNodeIds, setErrorNodeIds] = useState([]);
@@ -77,22 +77,20 @@ export default function EditorPage({ projectConfig, onBack }) {
     }, [projectConfig]);
 
     const handleElementUpdate = (updatedElement) => {
-        setSelectedNode(updatedElement);
+        setSelectedElement(updatedElement);
         if (canvasRef.current) {
             if (updatedElement.source) {
-                // It's an edge
                 canvasRef.current.updateEdgeData(updatedElement.id, updatedElement.data);
             } else {
-                // It's a node
                 canvasRef.current.updateNodeData(updatedElement.id, updatedElement.data);
             }
         }
     };
 
     const handleDeleteElement = () => {
-        if (selectedNode && canvasRef.current) {
-            canvasRef.current.deleteElement(selectedNode.id);
-            setSelectedNode(null);
+        if (selectedElement && canvasRef.current) {
+            canvasRef.current.deleteElement(selectedElement.id);
+            setSelectedElement(null);
         }
     };
 
@@ -239,20 +237,22 @@ export default function EditorPage({ projectConfig, onBack }) {
                 <div className="flex-grow relative min-h-0">
                     <Canvas
                         ref={canvasRef}
-                        onNodeSelect={setSelectedNode}
-                        selectedNodeId={selectedNode?.id}
+                        onNodeSelect={setSelectedElement}
+                        selectedNodeId={selectedElement?.id}
                         errorNodeIds={errorNodeIds}
                     />
                 </div>
 
-                {selectedNode && (
-                    <PropertiesPanel
-                        selectedNode={selectedNode}
-                        onChange={handleElementUpdate}
-                        onDelete={handleDeleteElement}
-                        onClose={() => setSelectedNode(null)}
-                    />
-                )}
+                <InspectorPanel
+                    selected={selectedElement}
+                    onNodeChange={handleElementUpdate}
+                    onEdgeChange={(edge) => {
+                        setSelectedElement(edge);
+                        canvasRef.current?.updateEdgeData(edge.id, edge.data);
+                    }}
+                    onDelete={handleDeleteElement}
+                    onClose={() => setSelectedElement(null)}
+                />
             </div>
 
             {/* Validation panel */}
