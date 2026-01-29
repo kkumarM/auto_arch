@@ -132,7 +132,7 @@ const CustomNode = ({ id, data, selected }) => {
             ${justDroppedClass} ${errorClass}
         `}>
             {/* Glassmorphic Background */}
-            <div className={`absolute inset-0 bg-[#1e293b]/90 backdrop-blur-xl rounded-xl border overflow-hidden ${selected ? 'border-blue-400' : 'border-white/10'}`}>
+            <div className={`bg-[#1e293b]/90 backdrop-blur-xl rounded-xl border overflow-hidden ${selected ? 'border-blue-400' : 'border-white/10'} min-h-[120px]`}>
                 {/* Gradient Header */}
                 <div className={`
                     h-14 w-full bg-gradient-to-r ${getGradient()}
