@@ -133,13 +133,13 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
             event.preventDefault();
 
             const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-            const type = event.dataTransfer.getData("application/reactflow");
+            const draggedType = event.dataTransfer.getData("application/reactflow");
             const label = event.dataTransfer.getData("application/reactflow/label");
             const icon = event.dataTransfer.getData("application/reactflow/icon");
             const color = event.dataTransfer.getData("application/reactflow/color");
 
             // Check if the dropped element is valid
-            if (typeof type === "undefined" || !type) {
+            if (typeof draggedType === "undefined" || !draggedType) {
                 return;
             }
 
@@ -148,12 +148,19 @@ const Canvas = forwardRef(({ onNodeSelect, selectedNodeId, errorNodeIds = [] }, 
                 y: event.clientY - reactFlowBounds.top,
             });
 
-            const isGroup = type === 'group';
+            const isGroup = draggedType === 'group';
+            const nodeRendererType = isGroup ? 'group' : 'custom';
+
             const newNode = {
                 id: getId(),
-                type: type,
+                type: nodeRendererType,
                 position,
-                data: { label: label || type, type: type, icon: icon, color: color },
+                data: {
+                    label: label || draggedType,
+                    type: draggedType,
+                    icon: icon,
+                    color: color,
+                },
                 style: isGroup ? { width: 300, height: 200, zIndex: -1 } : undefined, // Default size and z-index for groups
             };
 
